@@ -1,2 +1,2 @@
-basic-softwarewolves-Scala-bot
+basic softwarewolves Scala bot
 ==============================
