@@ -9,10 +9,14 @@ import akka.dispatch.Await
 import org.jivesoftware.smack.ConnectionConfiguration
 import org.jivesoftware.smack.packet.Presence
 import org.jivesoftware.smack.packet.Presence.Type._
+import org.jivesoftware.smack.packet.Message
 
 class TestXMPPStream extends XMPPStream {
-  override def connectForReal = {
-
+  override def connectForReal: TestXMPPStream = {
+	this
+  }
+  override def sendMsg(msg: Message): XMPPStream = {
+    this
   }
 }
 
@@ -24,7 +28,7 @@ class BasicBotSpec extends TestKit(ActorSystem("Softwarewolves"))
   with ImplicitSender
   with FunSpec
   with BeforeAndAfter {
-
+  
   val conn = TestFSMRef(new TestConnection)
 
   describe("an XMPPConnection") {
@@ -52,18 +56,11 @@ class BasicBotSpec extends TestKit(ActorSystem("Softwarewolves"))
       expectMsgClass(classOf[ActorRef])
     }
   }
-  
-  describe("a Connection"){
-    it("should pass on messages"){
-     
-    }
-  }
 
   describe("a Villager") {
     it("should tell the GameCoordinatorProxy that it wants to play") {
       val probe = TestProbe()
-      val villager = TestFSMRef(new Villager("francis", "francis", probe.ref))
-      assert(villager.stateName == Villager.Initial())
+      val villager = TestActorRef(new Villager("francis", "francis", probe.ref))
       probe.expectMsg(500 millis, "I want to play")
     }
   }

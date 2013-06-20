@@ -12,7 +12,7 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += "Jenkins-CI" at "http://repo.jenkins-ci.org/repo"
 
-//resolvers += "Sonatype OSS" at "https://oss.sonatype.org/content/repositories/releases/"
+resolvers += "Sonatype OSS" at "https://oss.sonatype.org/content/repositories/releases/"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "1.9.1"
@@ -24,6 +24,7 @@ libraryDependencies ++= Seq("actor") map { "com.typesafe.akka" % "akka-%s".forma
 libraryDependencies ++= Seq("testkit") map { "com.typesafe.akka" % "akka-%s".format(_) % "2.0.5" % "test" }
 
 libraryDependencies ++= Seq("smack", "smackx") map { "jivesoftware" % _ % "3.2.0" }
+
 
 //initialCommands := """
 //import akka.actor._
