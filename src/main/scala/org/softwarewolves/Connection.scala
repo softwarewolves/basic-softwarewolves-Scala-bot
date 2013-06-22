@@ -6,12 +6,14 @@ import org.jivesoftware.smack.packet.Message
 import akka.actor.ActorRef
 import akka.actor.Props
 import org.jivesoftware.smackx.muc.MultiUserChat
+import org.jivesoftware.smack.packet.Packet
+import org.jivesoftware.smack.PacketListener
 
 sealed trait ConnectionState
 case class Initial() extends ConnectionState
 case class Connected() extends ConnectionState
 case class LoggedIn() extends ConnectionState
-case class InRoom(room: String) extends ConnectionState
+case class InRoom() extends ConnectionState
 
 sealed trait ConnectionCommand
 case class Connect(srv: String) extends ConnectionCommand
@@ -19,11 +21,13 @@ case class Login(username: String, password: String, nickname: String) extends C
 case class SendMessage(msg: Message) extends ConnectionCommand
 case class WantToPlay(msg: Message) extends ConnectionCommand
 case class Invite(room: MultiUserChat) extends ConnectionCommand
+case class FromRoom(packet: Packet) extends ConnectionCommand
 
 class Connection extends Actor with FSM[ConnectionState, XMPPStream] {
   
   var xmppSrv: Option[String] = None
   var gc: Option[ActorRef] = None
+  var room: Option[ActorRef] = None
   
   startWith(Initial(), new XMPPStream(context.self))
   when(Initial()){
@@ -41,17 +45,31 @@ class Connection extends Actor with FSM[ConnectionState, XMPPStream] {
     case Event(WantToPlay(msg), d) => {
       gc = Some(sender)
       msg.setTo(msg.getTo() + "@" + xmppSrv.get)
+      msg.setFrom(d.username.get + "@" + xmppSrv.get)
       d.sendMsg(msg)
       stay
     }
+    case Event(Invite(r), d) => {
+      room = Some(context.system.actorOf(Props(new Room(r, context.self))))
+      r.addMessageListener(new PacketListener() {
+          override def processPacket(message: Packet): Unit = {
+            self ! FromRoom(message)
+          }
+        })
+      gc.get ! room.get
+      goto(InRoom()) using d
+    }
+  }
+  when(InRoom()){
     case Event(SendMessage(msg), d) => {
       d.sendMsg(msg)
       stay
     }
-    case Event(Invite(room), d) => {
-      gc.get ! context.system.actorOf(Props(new Room(room, context.self)))
+    case Event(FromRoom(msg), d) => {
+      Console.println("received a message from the room: " + msg.toXML())
+      room.get ! msg
       stay
-    }
+    } 
   }
   initialize
 }

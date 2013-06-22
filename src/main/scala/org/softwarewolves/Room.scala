@@ -11,19 +11,15 @@ case class NickName(nick: String)
 
 class Room(room: MultiUserChat, conn: ActorRef) extends Actor {
   
-  room.addPresenceInterceptor(new PacketInterceptor(){
-    override def interceptPacket(packet: Packet){
-      Console.println("sending Presence to the room: " + packet.toXML)
-    }    
-  })
+  var villager: Option[ActorRef] = None
   
   def receive = {
     
-    case NickName(nick) => {
-		room.join(nick)
+    case msg: Message => villager.get ! msg
+    case msg: String => {
+      villager = Some(sender)
+      room.sendMessage(msg)
     }
-    case msg: Message => room.sendMessage(msg)
-    case msg: String => room.sendMessage(msg)
       
   }
 

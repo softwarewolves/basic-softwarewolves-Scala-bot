@@ -10,68 +10,51 @@ import org.jivesoftware.smackx.muc.MultiUserChat
 import org.jivesoftware.smackx.muc.InvitationListener
 import akka.actor.ActorRef
 import org.jivesoftware.smack.PacketInterceptor
+import org.jivesoftware.smack.MessageListener
 
 class XMPPStream(actor: ActorRef) {
 
-	  var config: Option[ConnectionConfiguration] = None
-    var username: Option[String] = None
-    var password: Option[String] = None
-    var conn: Option[XMPPConnection] = None
-    
-    def setSrv(srv: String) = {
-      config = Some(new ConnectionConfiguration(srv, 5222))
-      this
-    }
-	
-    def setPrincipal(userName: String, passWord: String, nickname: String) = {
-      username = Some(userName)
-      password = Some(passWord)
-      conn = Some(new XMPPConnection(config.get))
-      conn.get.addPacketListener(new PacketListener(){
-        override def processPacket(packet: Packet) = {
-          Console.println("received packet " + packet.toXML)
-        }
-      }, new PacketFilter(){
-        def accept(packet: Packet) = {
-          true
-        }
-      })
-      conn.get.addPacketInterceptor(new PacketInterceptor(){
-        override def interceptPacket(packet: Packet) = {
-          Console.println("sending packet " + packet.toXML)
-          }
-      },  new PacketFilter(){
-        def accept(packet: Packet) = {
-          true
-        }
-      })
-      connectForReal
-      MultiUserChat.addInvitationListener(conn.get, new InvitationListener() {
-        override def invitationReceived(c: org.jivesoftware.smack.Connection, room: String, 
-        				inviter: String, 
-						reason: String, password: String, msg: Message) = {
-          Console.println("invitation received from " + inviter + " for " + room 
-              + ". He says: \"" + reason + "\"")
-          val gameChatRoom = new MultiUserChat(conn.get, room)
-          gameChatRoom.join("Frank")
-          actor ! Invite(gameChatRoom)
-        }
-      })
-      this
-    }
-    
-    def isConnected() = {
-      conn.get.isConnected
-    }
-  
-  	def connectForReal = {
-  	  conn.get.connect
-  	  conn.get.login(username.get, password.get)
-	    this
-	  }
-  	
-  	def sendMsg(msg: Message) = {
-  	  conn.get.sendPacket(msg)
-  	  this
-  	}
+  var config: Option[ConnectionConfiguration] = None
+  var username: Option[String] = None
+  var password: Option[String] = None
+  var conn: Option[XMPPConnection] = None
+
+  def setSrv(srv: String) = {
+    config = Some(new ConnectionConfiguration(srv, 5222))
+    this
+  }
+
+  def setPrincipal(userName: String, passWord: String, nickname: String) = {
+    username = Some(userName)
+    password = Some(passWord)
+    conn = Some(new XMPPConnection(config.get))
+    connectForReal
+    MultiUserChat.addInvitationListener(conn.get, new InvitationListener() {
+      override def invitationReceived(c: org.jivesoftware.smack.Connection, room: String,
+        inviter: String,
+        reason: String, password: String, msg: Message) = {
+        Console.println("invitation received from " + inviter + " for " + room
+          + ". He says: \"" + reason + "\"")
+        val gameChatRoom = new MultiUserChat(conn.get, room)
+        gameChatRoom.join("Frank")
+        actor ! Invite(gameChatRoom)
+      }
+    })
+    this
+  }
+
+  def isConnected() = {
+    conn.get.isConnected
+  }
+
+  def connectForReal = {
+    conn.get.connect
+    conn.get.login(username.get, password.get)
+    this
+  }
+
+  def sendMsg(msg: Message) = {
+    conn.get.sendPacket(msg)
+    this
+  }
 }

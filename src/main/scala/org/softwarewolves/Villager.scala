@@ -5,6 +5,7 @@ import scala.concurrent.duration._
 import akka.actor.actorRef2Scala
 import akka.actor.ActorSystem
 import akka.actor.Props
+import org.jivesoftware.smack.packet.Message
 
   
 object Villager extends App {
@@ -36,6 +37,9 @@ class Villager(username: String, password: String, gc: ActorRef) extends Actor {
     case r: ActorRef => {
       Console.println("whoopee, the room!")
       r ! "howdy"
+    }
+    case msg: Message => {
+      Console.println(msg.getFrom().split("/")(1) + " says: " + msg.getBody())
     }
   }
 }
