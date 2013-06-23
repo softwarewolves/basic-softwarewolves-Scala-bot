@@ -16,27 +16,30 @@ object Villager extends App {
   val name = "francis"
   val passwd = "francis"
   val nickname = "Frank"
-  val xmppSrv = "awtest1.vm.bytemark.co.uk"
+  val xmppSrv = "softwarewolves.org"
   val system = ActorSystem(name)
   val conn = system.actorOf(Props[Connection], "connection")
   conn ! Connect(xmppSrv)
   conn ! Login(name, passwd, nickname)
   val gc = system.actorOf(Props(new GameCoordinatorProxy(conn)))
   val myBot = system.actorOf(Props(new Villager(name, passwd, gc)))
-  Console.println(name + " is going to play softwarewolves. Yay.")
+  Console.println(nickname + " is going to play softwarewolves. Yay.")
 }
 
 class Villager(username: String, password: String, gc: ActorRef) extends Actor {
   
   import Villager._
   
+  var room: Option[ActorRef] = None
+  
   gc ! "I want to play"
 
   def receive = {
     
-    case r: ActorRef => {
+    case room: ActorRef => {
       Console.println("whoopee, the room!")
-      r ! "howdy"
+      this.room = Some(room)
+      room ! "howdy"
     }
     case msg: Message => {
       Console.println(msg.getFrom().split("/")(1) + " says: " + msg.getBody())

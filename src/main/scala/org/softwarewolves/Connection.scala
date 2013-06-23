@@ -66,7 +66,6 @@ class Connection extends Actor with FSM[ConnectionState, XMPPStream] {
       stay
     }
     case Event(FromRoom(msg), d) => {
-      Console.println("received a message from the room: " + msg.toXML())
       room.get ! msg
       stay
     } 

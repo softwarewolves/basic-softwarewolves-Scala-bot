@@ -21,7 +21,7 @@ class TestXMPPStream extends XMPPStream {
 }
 
 class TestConnection extends Connection {
-  startWith(Initial(), new TestXMPPStream)
+  startWith(Initial(), new TestXMPPStream(self))
 }
 
 class BasicBotSpec extends TestKit(ActorSystem("Softwarewolves"))

@@ -36,7 +36,7 @@ class XMPPStream(actor: ActorRef) {
         Console.println("invitation received from " + inviter + " for " + room
           + ". He says: \"" + reason + "\"")
         val gameChatRoom = new MultiUserChat(conn.get, room)
-        gameChatRoom.join("Frank")
+        gameChatRoom.join(nickname)
         actor ! Invite(gameChatRoom)
       }
     })
