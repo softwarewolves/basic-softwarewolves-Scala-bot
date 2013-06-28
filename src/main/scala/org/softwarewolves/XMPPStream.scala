@@ -28,7 +28,18 @@ class XMPPStream(actor: ActorRef) {
     username = Some(userName)
     password = Some(passWord)
     conn = Some(new XMPPConnection(config.get))
-    connectForReal
+    connectForReal(nickname)
+    this
+  }
+
+  def isConnected() = {
+    conn.get.isConnected
+  }
+
+  def connectForReal(nickname: String) = {
+    conn.get.connect
+    conn.get.login(username.get, password.get)
+
     MultiUserChat.addInvitationListener(conn.get, new InvitationListener() {
       override def invitationReceived(c: org.jivesoftware.smack.Connection, room: String,
         inviter: String,
@@ -40,16 +51,7 @@ class XMPPStream(actor: ActorRef) {
         actor ! Invite(gameChatRoom)
       }
     })
-    this
-  }
 
-  def isConnected() = {
-    conn.get.isConnected
-  }
-
-  def connectForReal = {
-    conn.get.connect
-    conn.get.login(username.get, password.get)
     this
   }
 
