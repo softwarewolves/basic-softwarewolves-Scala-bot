@@ -11,9 +11,9 @@ import org.jivesoftware.smack.packet.Presence
 import org.jivesoftware.smack.packet.Presence.Type._
 import org.jivesoftware.smack.packet.Message
 
-class TestXMPPStream extends XMPPStream {
-  override def connectForReal: TestXMPPStream = {
-	this
+class TestXMPPStream(actor: ActorRef) extends XMPPStream(actor) {
+  override def connectForReal(nickname: String): TestXMPPStream = {
+	  this
   }
   override def sendMsg(msg: Message): XMPPStream = {
     this
@@ -39,7 +39,7 @@ class BasicBotSpec extends TestKit(ActorSystem("Softwarewolves"))
       assert(conn.stateData.config.get.getHost == "awtest1.vm.bytemark.co.uk")
     }
     it("goes into the LoggedIn state after receiving username and password") {
-      conn ! Login("francis", "francis")
+      conn ! Login("francis", "francis", "francis")
       assert(conn.stateName == LoggedIn())
       conn.stateData.conn.get.disconnect(new Presence(unavailable))
     }
@@ -49,11 +49,11 @@ class BasicBotSpec extends TestKit(ActorSystem("Softwarewolves"))
     }
   }
 
-  describe("a GomeCoordinatorProxy") {
+  describe("a GameCoordinatorProxy") {
     it("should return a room") {
-      val gc = TestActorRef(new GameCoordinatorProxy(conn))
+      val gc = TestActorRef(new GameCoordinatorProxy(self))
       gc ! "I want to play"
-      expectMsgClass(classOf[ActorRef])
+      expectMsgClass(classOf[WantToPlay])
     }
   }
 
